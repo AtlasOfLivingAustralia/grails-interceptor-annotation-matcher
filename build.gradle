@@ -1,0 +1,89 @@
+plugins {
+    id 'groovy'
+    id 'java'
+    id 'maven-publish'
+}
+
+group 'au.org.ala.grails'
+version '1.0.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    maven { url "https://nexus.ala.org.au/content/groups/public/" }
+    maven { url "https://repo.grails.org/grails/core" }
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.grails:grails-core:$grailsVersion"
+    implementation "org.grails:grails-plugin-interceptors:$grailsVersion"
+
+    testImplementation 'org.grails:grails-testing-support:2.1.3'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+
+    testImplementation platform("org.spockframework:spock-bom:2.1-groovy-2.5")
+    testImplementation "org.spockframework:spock-core"
+//    testImplementation "org.spockframework:spock-junit4"  // you can remove this if your code does not rely on old JUnit 4 rules
+
+    // optional dependencies for using Spock
+//    testImplementation "org.hamcrest:hamcrest-core:2.2"   // only necessary if Hamcrest matchers are used
+//    testRuntimeOnly 'net.bytebuddy:byte-buddy:1.12.7' // allows mocking of classes (in addition to interfaces)
+//    testRuntimeOnly "org.objenesis:objenesis:3.2"      // allows mocking of classes without default constructor (together with ByteBuddy or CGLIB)
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+publishing {
+    repositories {
+        maven {
+            name 'Nexus'
+            url "https://nexus.ala.org.au/content/repositories/${project.version.endsWith('-SNAPSHOT') ? 'snapshots' : 'releases' }"
+            credentials {
+                username = System.getenv('TRAVIS_DEPLOY_USERNAME')
+                password = System.getenv('TRAVIS_DEPLOY_PASSWORD')
+            }
+        }
+    }
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = 'Interceptor Annotation Matcher'
+                description = 'Library for adding Grails interceptor \'match\'ing based on annotation'
+                url = 'https://github.com/AtlasOfLivingAustralia/interceptor-annotation-matcher'
+                licenses {
+                    license {
+                        name = 'MPL-1.1'
+                        url = 'https://www.mozilla.org/en-US/MPL/1.1/'
+                    }
+                }
+            }
+
+        }
+    }
+}
