@@ -210,7 +210,7 @@ public class AnnotationMatcher {
          * annotation if the action didn't have one.  The override annotation is not considered in this method.
          * @return The effective annotation for this result
          */
-        T effectiveAnnotation() {
+        public T effectiveAnnotation() {
             return actionAnnotation != null ? actionAnnotation : controllerAnnotation;
         }
     }
